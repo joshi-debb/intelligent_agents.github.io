@@ -1,56 +1,53 @@
-// Función del agente reflexivo
+// Function that determines the agent's action based on its location and the state of that location
 function reflex_agent(location, state) {
-    if (state == "sucia") return "CLEAN";
-    else if (location == "A") return "RIGHT";
-    else if (location == "B") return "LEFT";
+    if (state === "dirty") {
+        return "clean";
+    } else if (location === "a") {
+        return "go_right";
+    } else if (location === "b") {
+        return "go_left";
+    }
 }
 
-// Función de simulación
-function test(states) {
-    var location = states[0];
-    var state = states[0] == "A" ? states[1] : states[2];
-    var action_result = reflex_agent(location, state);
-
-    document.getElementById("log").innerHTML += `<br>Location: ${location} | Action: ${action_result}`;
-
-    if (action_result == "CLEAN") {
-        if (location == "A") states[1] = "limpia";
-        else if (location == "B") states[2] = "limpia";
-    } else if (action_result == "RIGHT") states[0] = "B";
-    else if (action_result == "LEFT") states[0] = "A";
-
-    // Ensuciar aleatoriamente las habitaciones
-    ensuciarAleatoriamente();
-
-    // Verificar si todas las habitaciones están limpias
-    if (todosLimpios()) {
-        document.getElementById("log").innerHTML += "<br>Todas las habitaciones están limpias. Deteniendo el programa.";
-        return; // Detener la simulación
+// Function that simulates the agent's behavior over multiple steps
+function run_simulation(states, remainingSteps) {
+    if (remainingSteps <= 0) {
+        document.getElementById("log").innerHTML += `<br>Simulation successfully completed.`;
+        return;
     }
 
-    setTimeout(function () { test(states); }, 2000);
+    // Determine the agent's current location and state
+    var currentLocation = states[0];
+    var currentState = currentLocation === "a" ? states[1] : states[2];
+
+    // Get the action to be performed by the agent
+    var action = reflex_agent(currentLocation, currentState);
+
+    // Log the location, state, and action
+    document.getElementById("log").innerHTML += `<br>Location: ${currentLocation} | State: ${currentState} | Action: ${action}`;
+
+    // Update the system state based on the agent's action
+    if (action === "clean") {
+        if (currentLocation === "a") {
+            states[1] = "clean";
+        } else if (currentLocation === "b") {
+            states[2] = "clean";
+        }
+    } else if (action === "go_right") {
+        states[0] = "b";
+    } else if (action === "go_left") {
+        states[0] = "a";
+    }
+
+    // Call the function again after 1 second, reducing the remaining steps
+    setTimeout(function() {
+        run_simulation(states, remainingSteps - 1);
+    }, 1000);
 }
 
-// Función para ensuciar aleatoriamente una habitación
-function ensuciarAleatoriamente() {
-    let habitacion = habitaciones[Math.floor(Math.random() * habitaciones.length)];
-    habitacion.limpieza = "sucia";
-    document.getElementById("log").innerHTML += `<br>Habitación ${habitacion.id} ensuciada.`;
-}
+// Initial system state: location and cleanliness state of each point
+var initialStates = ["a", "dirty", "dirty"];
+var totalSteps = 16;
 
-// Función para verificar si todas las habitaciones están limpias
-function todosLimpios() {
-    return habitaciones.every(hab => hab.limpieza === "limpia");
-}
-
-// Estado inicial de las habitaciones
-let habitaciones = Array.from({ length: 8 }, (_, i) => ({
-    id: i + 1,
-    limpieza: "sucia",
-    ubicacion: (i % 2 === 0) ? "A" : "B" // Alterna entre A y B
-}));
-
-var states = ["A", ...habitaciones.map(hab => hab.limpieza)];
-
-// Iniciar la simulación
-test(states);
+// Start the simulation with the initial states and the number of steps
+run_simulation(initialStates, totalSteps);
